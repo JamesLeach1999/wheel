@@ -1,0 +1,64 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: user-template
+  title: User template
+  description: Create user
+  tags:
+    - user
+
+spec:
+  type: user
+
+  parameters:
+    - title: User deets
+      required:
+          - name
+        properties:
+          name:
+            title: Name
+            type: string
+            description: Unique name of the component
+            ui:autofocus: true
+            ui:options:
+              rows: 5
+
+          email:
+            title: Email
+            type: string
+            description: Email
+
+
+  steps:
+    - id: template
+      name:
+      action: fetch:template
+        input:
+          url: ./template
+          values:
+            name: ${{ parameters.name }}
+            email: ${{ parameters.email }}
+
+    - id: rename-yaml
+      action: fs:rename
+      input:
+      files:
+      - from: user.yaml
+        to: ${{ parameters.email }}.yaml
+
+    - id: publish
+      name: publish
+      action: publish:githb:pull-request
+      input:
+        repoUrl:
+        title:
+        description:
+        targetPath: org
+
+output:
+  links:
+    - title: repository
+      url: ${{ steps.publish.output.remoteUrl }}
+    - title: Open in cat
+      icon: catalog
+      entityRef: ${{ steps.register.output.entityRef }}
